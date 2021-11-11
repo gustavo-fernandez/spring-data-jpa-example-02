@@ -4,14 +4,19 @@ import com.example.springdatajpa02.entity.Address;
 import com.example.springdatajpa02.entity.Author;
 import com.example.springdatajpa02.entity.Book;
 import com.example.springdatajpa02.entity.Library;
+import com.example.springdatajpa02.repository.BookRepository;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootApplication
@@ -24,7 +29,8 @@ public class SpringDataJpa02Application {
 
   @Bean
   CommandLineRunner commandLineRunner(
-    EntityManager entityManager, TransactionTemplate transactionTemplate) {
+    EntityManager entityManager, TransactionTemplate transactionTemplate,
+    BookRepository bookRepository) {
     return args -> {
       transactionTemplate.execute(status -> {
         log.info("Ejecutandose..." + entityManager);
@@ -44,6 +50,16 @@ public class SpringDataJpa02Application {
 
         entityManager.persist(library);
 
+        return null;
+      });
+
+      transactionTemplate.execute(status -> {
+        var primeraPagina = PageRequest.of(0, 1, Sort.by("isbn"));
+        var pageOne = bookRepository.findAll(primeraPagina);
+        log.info(">>> Page 1: " + pageOne.stream().collect(Collectors.toList()));
+
+        var pageTwo = bookRepository.findAll(primeraPagina.next());
+        log.info(">>> Page 2: " + pageTwo.stream().collect(Collectors.toList()));
         return null;
       });
     };
